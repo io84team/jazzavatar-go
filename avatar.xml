@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" x="0" y="0" width="{{ .Size }}" height="{{ .Size }}">
+    <defs>
+        <clipPath id="avatar">
+            <rect x="0" y="0" width="{{ .Size }}" height="{{ .Size }}" rx="{{ .Radius }}" ry="{{ .Radius }}"/>
+        </clipPath>
+    </defs>
+
+    <g clip-path="url(#avatar)">
+        <rect x="0" y="0" width="{{ .Size }}" height="{{ .Size }}" fill="{{ .BgColor }}" />
+        {{range .Shapes}}
+        <rect x="0" y="0" width="{{ $.Size }}" height="{{ $.Size }}" transform="translate({{ .Tx }} {{ .Ty }}) rotate({{ .Rotate }} {{ .Center }} {{ .Center }})" fill="{{ .Color }}"/>
+        {{end}}
+    </g>
+</svg>
