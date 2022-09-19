@@ -3,11 +3,17 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"image"
+	"image/png"
 	"net/http"
+	"net/http/httptest"
+	"strconv"
 
 	ja "github.com/io84team/jazzavatar-go"
 
 	"github.com/gorilla/mux"
+	"github.com/srwiley/oksvg"
+	"github.com/srwiley/rasterx"
 )
 
 func main() {
@@ -29,7 +35,35 @@ func main() {
 		if err != nil {
 			fmt.Fprintln(w, "500 error:", err)
 		} else {
-			requestAvatar(ja, w, r)
+
+			recorder := httptest.NewRecorder()
+			requestAvatar(ja, recorder)
+
+			icon, err := oksvg.ReadIconStream(recorder.Body)
+			if err != nil {
+				fmt.Fprintln(w, "500 error:", err)
+			}
+
+			sizeInt, err := strconv.Atoi(size)
+			if err != nil {
+				fmt.Fprintln(w, "500 error:", err)
+			}
+
+			icon.SetTarget(0, 0, float64(sizeInt), float64(sizeInt))
+
+			rgba := image.NewRGBA(image.Rect(0, 0, sizeInt, sizeInt))
+			icon.Draw(rasterx.NewDasher(sizeInt, sizeInt, rasterx.NewScannerGV(sizeInt, sizeInt, rgba, rgba.Bounds())), 1)
+
+			err = png.Encode(w, rgba)
+
+			w.Header().Add("Content-Type", "image/png")
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Add("Access-Control-Allow-Methods", "GET")
+
+			if err != nil {
+				fmt.Fprintln(w, "500 error:", err)
+			}
 		}
 
 	})
@@ -42,7 +76,7 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }
 
-func requestAvatar(ja *ja.Jazzavatar, w http.ResponseWriter, r *http.Request) {
+func requestAvatar(ja *ja.Jazzavatar, w http.ResponseWriter) {
 	tmpl := template.Must(template.ParseFiles("avatar.xml"))
 
 	w.Header().Add("Content-Type", "image/svg+xml")
