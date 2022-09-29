@@ -49,6 +49,10 @@ func main() {
 				fmt.Fprintln(w, "500 error:", err)
 			}
 
+			if sizeInt >= 1024 {
+				sizeInt = 1024
+			}
+
 			icon.SetTarget(0, 0, float64(sizeInt), float64(sizeInt))
 
 			rgba := image.NewRGBA(image.Rect(0, 0, sizeInt, sizeInt))
